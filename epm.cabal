@@ -26,37 +26,45 @@ source-repository head
   location: https://github.com/githubuser/epm
 
 library
-  exposed-modules:
-      Lib
-  other-modules:
-      Paths_epm
-  hs-source-dirs:
-      src
-  build-depends:
-      base >=4.7 && <5
-  default-language: Haskell2010
+  exposed-modules:    Lib
+                    , Fingerprint
+  other-modules:      Paths_epm
+  hs-source-dirs:     src
+  build-depends:      base >=4.7 && <5
+                    , hmatrix
+                    , kdt
+                    , split
+  default-language:   Haskell2010
+  default-extensions: Strict StrictData
 
 executable epm-exe
-  main-is: Main.hs
-  other-modules:
-      Paths_epm
-  hs-source-dirs:
-      app
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
-  build-depends:
-      base >=4.7 && <5
-    , epm
-  default-language: Haskell2010
+  main-is:            Main.hs
+  other-modules:      Paths_epm
+  hs-source-dirs:     app
+  ghc-options:        -threaded -rtsopts -with-rtsopts=-N
+  build-depends:      base >=4.7 && <5
+                    , epm
+  default-language:   Haskell2010
+
+executable findsame
+  main-is:            Main-findsame.hs
+  other-modules:      Paths_epm
+  hs-source-dirs:     app
+  ghc-options:        -threaded -rtsopts -with-rtsopts=-N -Wall
+  build-depends:      base >=4.7 && <5
+                    , hmatrix
+                    , kdt
+                    , split
+                    , epm
+  default-language:   Haskell2010
+  default-extensions: Strict StrictData
 
 test-suite epm-test
-  type: exitcode-stdio-1.0
-  main-is: Spec.hs
-  other-modules:
-      Paths_epm
-  hs-source-dirs:
-      test
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
-  build-depends:
-      base >=4.7 && <5
-    , epm
-  default-language: Haskell2010
+  type:               exitcode-stdio-1.0
+  main-is:            Spec.hs
+  other-modules:      Paths_epm
+  hs-source-dirs:     test
+  ghc-options:        -threaded -rtsopts -with-rtsopts=-N
+  build-depends:      base >=4.7 && <5
+                    , epm
+  default-language:   Haskell2010
