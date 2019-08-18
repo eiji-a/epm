@@ -1,2 +1,10 @@
+module Main (
+  main
+) where
+
+import Fingerprint
+import Test.HUnit ((~=?))
+
 main :: IO ()
-main = putStrLn "Test suite not yet implemented"
+main = do
+  captured <- Silently.capture_ Fingerprint.
