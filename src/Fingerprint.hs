@@ -1,15 +1,18 @@
 -- Fingerprint
 {-# LANGUAGE DeriveFunctor #-}
-{-# LANGUAGE Strict #-}
-{-# LANGUAGE StrictData #-}
+--{-# LANGUAGE Strict #-}
+--{-# LANGUAGE StrictData #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE BangPatterns #-}
 
 module Fingerprint (
   Fingerprint
 , FpUnit
 , ColorUnit
 , ColorVector
+, ColorVectorMap
+, colorvector0
 , fp2colvec
 , makeMap
 , findSimilarImage
@@ -39,6 +42,12 @@ type ColorUnit = Double
 type Channel = [ColorUnit]
 
 type Color = [ColorUnit]  -- (r,g,b) => [r,g,b]
+
+data CvStatus = FILED | PEND | DISCARDED | DUPLICATED | INFERIOR | INVALID
+  deriving (Eq, Show, Generic)
+instance NFData CvStatus where
+  rnf = genericRnf
+
 data ColorVector = ColorVector
   { pixel  :: [Color]
   , imgid  :: Int
@@ -49,12 +58,10 @@ data ColorVector = ColorVector
 instance NFData ColorVector where
   rnf = genericRnf
 
-type ColorVectorMap = KT.KdTree Double ColorVector
+colorvector0 :: ColorVector
+colorvector0 = ColorVector [] 0 "" INVALID
 
-data CvStatus = FILED | PEND | DISCARDED | DUPLICATED | INFERIOR
-  deriving (Eq, Show, Generic)
-instance NFData CvStatus where
-  rnf = genericRnf
+type ColorVectorMap = KT.KdTree Double ColorVector
 
 -- constants
 --   status
@@ -123,13 +130,16 @@ ColorVector {pixel = [[1.0,1.0,1.0],[3.0,3.0,3.0],[3.0,3.0,3.0],[5.0,5.0,5.0]], 
 -}
 
 fp2colvec :: Int -> Int -> Int -> Fingerprint -> T.Text -> ColorVector
-fp2colvec oreso vreso imgid fp st = ColorVector pixel imgid fp' st'
+fp2colvec oreso vreso imgid fp st
+  |T.length fp == 0 = colorvector0
+  |T.length st == 0 = colorvector0
+  |otherwise        = ColorVector pixel imgid fp' st'
   where
     --fp' = fp2double fp
     fp' = fp
     d = oreso `div` vreso
-    chs = map (matrix oreso) $ fp2channels fp
-    pixel = transpose $ map (summary d vreso) chs
+    !chs = map (matrix oreso) $ fp2channels fp
+    !pixel = transpose $ map (summary d vreso) chs
     --pixel = [[1,1,1],[3,3,3],[3,3,3],[5,5,5]]
     st' = case st of
       "filed"      -> FILED
@@ -137,7 +147,7 @@ fp2colvec oreso vreso imgid fp st = ColorVector pixel imgid fp' st'
       "deleted"    -> DISCARDED
       "duplicated" -> DUPLICATED
       "inferior"   -> INFERIOR
-      _            -> DISCARDED
+      _            -> INVALID
 
 colvec2id :: ColorVector -> Int
 colvec2id (ColorVector _ i _ _) = i
